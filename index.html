@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -306,12 +307,12 @@
                         </svg>
                     </div>
                     <span class="font-semibold text-sm text-white group-hover:text-[#A6FF85]">
-                        Clique ou arraste sua Skin PNG aqui
+                        Clique ou arraste sua Skin PNG ou WebP aqui
                     </span>
                     <span class="text-xs text-gray-400 mt-1">
                         Formato padrão 64x64 pixels (Java & Bedrock)
                     </span>
-                    <input type="file" id="skinFileInput" accept="image/png,image/*" class="hidden">
+                    <input type="file" id="skinFileInput" accept="image/png,image/webp,image/*" class="hidden">
                 </label>
 
                 <!-- Aviso de Dimensão (oculto por padrão) -->
@@ -405,6 +406,39 @@
                 </div>
             </div>
 
+            <!-- Bloco 4: Identificador de Paleta Extraída -->
+            <div class="mc-panel rounded-lg p-5">
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="font-pixel text-xs sm:text-sm text-[#A6FF85] flex items-center gap-2">
+                        <span>4.</span> IDENTIFICADOR DE PALETA
+                    </h2>
+                    <span id="paletteCountBadge" class="text-[11px] bg-[#1C1C1C] text-[#8CE665] px-2 py-0.5 rounded border border-[#3E5C32] font-mono">
+                        0 grupos
+                    </span>
+                </div>
+                <p class="text-xs text-gray-300 mb-3">
+                    Clusters detectados na skin (Original <span class="text-gray-500">→</span> Trailer). Clique em um tom para destacá-lo ou ajuste a tolerância de fusão:
+                </p>
+
+                <!-- Slider de Tolerância de Agrupamento da Paleta -->
+                <div class="mb-3 bg-[#1F1F1F] p-2.5 rounded border border-[#3D3D3D]">
+                    <div class="flex justify-between text-[11px] font-semibold mb-1">
+                        <label for="sliderTolerance" class="text-gray-300">Tolerância de Agrupamento de Tons</label>
+                        <span id="valTolerance" class="text-[#A6FF85] font-mono">38</span>
+                    </div>
+                    <input type="range" id="sliderTolerance" min="12" max="80" value="38" class="mc-slider rounded">
+                </div>
+
+                <!-- Grid de Swatches (Comparação de Paleta Detectada vs Convertida) -->
+                <div id="paletteSwatchesContainer" class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-44 overflow-y-auto pr-1">
+                    <!-- Preenchido dinamicamente pelo JS -->
+                </div>
+                <div id="paletteFilterHint" class="hidden mt-2 text-[11px] text-[#FFD24C] flex items-center justify-between bg-[#2D2716] px-2.5 py-1.5 rounded border border-[#6E5B24]">
+                    <span id="paletteFilterText">Destacando grupo de cor</span>
+                    <button id="btnClearPaletteHighlight" class="underline font-bold ml-2 cursor-pointer">Limpar</button>
+                </div>
+            </div>
+
         </section>
 
         <!-- COLUNA DIREITA: Pré-visualização 3D, Comparação 2D e Download (7 colunas em desktop) -->
@@ -414,7 +448,7 @@
             <div class="mc-panel rounded-lg p-5 flex-1 flex flex-col">
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <h2 class="font-pixel text-xs sm:text-sm text-white flex items-center gap-2">
-                        <span>4.</span> PRÉ-VISUALIZAÇÃO
+                        <span>5.</span> PRÉ-VISUALIZAÇÃO
                     </h2>
 
                     <!-- Controles de Visualização -->
@@ -536,10 +570,12 @@
             vibrance: 55,       // 0 a 100
             smoothing: 72,      // 1 a 100
             brightness: 8,      // -20 a 35
+            tolerance: 38,      // 12 a 80 (Tolerância perceptual para fundir degradês)
+            highlightedCluster: -1, // Índice do grupo de cor destacado (-1 = nenhum)
             showHat: true,
             showGrid: false,
             preview3DMode: 'trailer', // 'trailer' | 'original'
-            skinFileName: 'minecraft_trailer_skin.png'
+            skinFileName: 'Steve_BE_skin_trailer_64x64.png'
         };
 
         // Referências de Canvas
@@ -592,30 +628,508 @@
 
         /**
          * ============================================================================
-         * GERADOR DE SKINS DE EXEMPLO 64x64 PROCEDURAIS (STEVE & ALEX/AVENTUREIRA)
-         * Garante que o usuário possa testar imediatamente sem ter um arquivo PNG
+         * CARREGAMENTO DAS SKINS DE EXEMPLO (Steve_BE_skin.webp & Alex_BE_skin.webp)
+         * Carrega os arquivos relativos na pasta raiz; se indisponível no ambiente
+         * isolado, utiliza um fallback silencioso em canvas.
          * ============================================================================
          */
-        function generateExampleSkin(type = 'steve') {
+        function loadExampleSkin(type = 'steve') {
+            const fileName = type === 'steve' ? 'Steve_BE_skin.webp' : 'Alex_BE_skin.webp';
+            const displayLabel = type === 'steve' ? 'Steve_BE_skin.webp' : 'Alex_BE_skin.webp';
+            state.highlightedCluster = -1;
+            updateHighlightBanner();
+
+            const img = new Image();
+            img.onload = function() {
+                rawOrigCtx.clearRect(0, 0, 64, 64);
+                if (img.width === 64 && img.height === 32) {
+                    rawOrigCtx.drawImage(img, 0, 0, 64, 32);
+                } else {
+                    rawOrigCtx.drawImage(img, 0, 0, 64, 64);
+                }
+                state.skinFileName = `${type}_trailer_64x64.png`;
+                document.getElementById('dimensionWarning').classList.add('hidden');
+                document.getElementById('skinStatusBadge').textContent = displayLabel;
+                processSkin();
+            };
+
+            img.onerror = function() {
+                // Fallback silencioso caso o navegador esteja rodando sem os arquivos .webp locais
+                drawFallbackSkin(type);
+                state.skinFileName = `${type}_trailer_64x64.png`;
+                document.getElementById('dimensionWarning').classList.add('hidden');
+                document.getElementById('skinStatusBadge').textContent = `${displayLabel} (Fallback)`;
+                processSkin();
+            };
+
+            img.src = `./${fileName}`;
+        }
+
+        function drawFallbackSkin(type = 'steve') {
             rawOrigCtx.clearRect(0, 0, 64, 64);
 
-            // Função auxiliar para pintar retângulos com variação de ruído natural de skin tradicional
             function fillNoisyRect(x, y, w, h, baseHex, noiseAmount = 14) {
                 const rgb = hexToRgb(baseHex);
                 for (let py = y; py < y + h; py++) {
                     for (let px = x; px < x + w; px++) {
-                        // Ruído determinístico baseado na posição para simular texturas clássicas de skin
                         const hash = Math.sin(px * 12.9898 + py * 78.233) * 43758.5453;
-                        const rand = (hash - Math.floor(hash)) * 2 - 1; // -1 a 1
+                        const rand = (hash - Math.floor(hash)) * 2 - 1;
                         const delta = Math.round(rand * noiseAmount);
-
-                        const r = clamp(rgb.r + delta, 0, 255);
-                        const g = clamp(rgb.g + delta, 0, 255);
-                        const b = clamp(rgb.b + delta, 0, 255);
-
-                        rawOrigCtx.fillStyle = `rgb(${r},${g},${b})`;
+                        rawOrigCtx.fillStyle = `rgb(${clamp(rgb.r + delta, 0, 255)},${clamp(rgb.g + delta, 0, 255)},${clamp(rgb.b + delta, 0, 255)})`;
                         rawOrigCtx.fillRect(px, py, 1, 1);
                     }
+                }
+            }
+
+            if (type === 'steve') {
+                fillNoisyRect(0, 0, 32, 16, '#B58463', 15);
+                fillNoisyRect(8, 0, 8, 8, '#3B2718', 12);
+                fillNoisyRect(24, 8, 8, 8, '#3B2718', 12);
+                fillNoisyRect(0, 8, 8, 4, '#3B2718', 12);
+                fillNoisyRect(16, 8, 8, 4, '#3B2718', 12);
+                fillNoisyRect(8, 8, 8, 2, '#3B2718', 10);
+                rawOrigCtx.fillStyle = '#FFFFFF';
+                rawOrigCtx.fillRect(9, 12, 1, 1);
+                rawOrigCtx.fillRect(14, 12, 1, 1);
+                rawOrigCtx.fillStyle = '#4A368C';
+                rawOrigCtx.fillRect(10, 12, 1, 1);
+                rawOrigCtx.fillRect(13, 12, 1, 1);
+                rawOrigCtx.fillStyle = '#946346';
+                rawOrigCtx.fillRect(11, 13, 2, 1);
+                rawOrigCtx.fillStyle = '#52321E';
+                rawOrigCtx.fillRect(10, 14, 4, 1);
+
+                fillNoisyRect(16, 16, 24, 16, '#009E9E', 18);
+                fillNoisyRect(40, 16, 16, 16, '#B58463', 14);
+                fillNoisyRect(40, 16, 16, 6, '#009E9E', 16);
+                fillNoisyRect(32, 48, 16, 16, '#B58463', 14);
+                fillNoisyRect(32, 48, 16, 6, '#009E9E', 16);
+                fillNoisyRect(0, 16, 16, 16, '#3B489E', 16);
+                fillNoisyRect(16, 48, 16, 16, '#3B489E', 16);
+
+                // Faixa frontal do chapéu em UV (40, 8, 8, 8)
+                rawOrigCtx.fillStyle = '#333333';
+                rawOrigCtx.fillRect(40, 9, 8, 2);
+                rawOrigCtx.fillStyle = '#47D1FF';
+                rawOrigCtx.fillRect(41, 9, 2, 2);
+                rawOrigCtx.fillRect(45, 9, 2, 2);
+            } else {
+                fillNoisyRect(0, 0, 32, 16, '#E8B896', 12);
+                fillNoisyRect(8, 0, 8, 8, '#C95D24', 16);
+                fillNoisyRect(24, 8, 8, 8, '#C95D24', 16);
+                fillNoisyRect(0, 8, 8, 6, '#C95D24', 16);
+                fillNoisyRect(16, 8, 8, 6, '#C95D24', 16);
+                fillNoisyRect(8, 8, 8, 2, '#C95D24', 12);
+                rawOrigCtx.fillStyle = '#FFFFFF';
+                rawOrigCtx.fillRect(9, 12, 1, 1);
+                rawOrigCtx.fillRect(14, 12, 1, 1);
+                rawOrigCtx.fillStyle = '#3A8E2B';
+                rawOrigCtx.fillRect(10, 12, 1, 1);
+                rawOrigCtx.fillRect(13, 12, 1, 1);
+
+                fillNoisyRect(16, 16, 24, 16, '#659638', 18);
+                fillNoisyRect(40, 16, 16, 16, '#E8B896', 12);
+                fillNoisyRect(40, 16, 16, 5, '#659638', 14);
+                fillNoisyRect(32, 48, 16, 16, '#E8B896', 12);
+                fillNoisyRect(32, 48, 16, 5, '#659638', 14);
+                fillNoisyRect(0, 16, 16, 16, '#523B2B', 15);
+                fillNoisyRect(16, 48, 16, 16, '#523B2B', 15);
+
+                rawOrigCtx.fillStyle = '#D96B2B';
+                rawOrigCtx.fillRect(40, 8, 8, 2);
+            }
+        }
+
+        /**
+         * ============================================================================
+         * ALGORITMO AVANÇADO DE IDENTIFICAÇÃO DE PALETA & DEGRADÊ (CONNECTED REGIONS)
+         * ============================================================================
+         * Resolve falhas/buracos em degradês:
+         * 1. Converte pixels opacos para espaço perceptual CIELAB (L*a*b*) para medir
+         *    diferença real de cor como o olho humano enxerga.
+         * 2. Agrupamento Global de Paleta (Color Clustering): identifica os grupos
+         *    principais de cores da skin (ex: pele, cabelo, camisa, calça, detalhes)
+         *    para alimentar o Identificador de Paleta e guiar a coerência cromática.
+         * 3. Flood-Fill / Componentes Conectados por Região (BFS 4-direções):
+         *    Pixels vizinhos pertencentes à mesma família de cor/degradê suave são
+         *    agrupados em uma única região contínua, sem deixar pixels soltos ou falhas.
+         *    Bordas de alto contraste (olhos, pupilas, boca, fivelas) são preservadas.
+         * 4. No modo 'Sem Muita Sombra', toda a região conectada recebe uma cor sólida
+         *    limpa e vibrante (estilo Bare Bones).
+         *    No modo 'Sombra Bem Mínima', cada região recebe no máximo 2 tons suaves
+         *    (tom base iluminado + 1 sombra mínima nas bordas mais escuras da região).
+         */
+        function processSkin() {
+            const width = 64;
+            const height = 64;
+            const srcData = rawOrigCtx.getImageData(0, 0, width, height);
+            const pixels = srcData.data;
+
+            const outData = rawProcCtx.createImageData(width, height);
+            const outPixels = outData.data;
+
+            const isFlatMode = state.shadowMode === 'flat';
+            const smoothFactor = state.smoothing / 100; // 0.01 a 1.0
+            const vibranceBoost = (state.vibrance / 100) * 0.58;
+            const lightBoost = state.brightness / 100;
+
+            // Limiar perceptual Delta-E (CIELAB) para fundir degradês vizinhos sem falhas
+            const baseDeltaE = state.tolerance * (0.65 + smoothFactor * 0.75);
+            const neighborThreshold = isFlatMode ? baseDeltaE * 1.15 : baseDeltaE * 0.88;
+
+            // Pré-calcular CIELAB de todos os pixels
+            const labPixels = new Array(width * height);
+            for (let i = 0; i < width * height; i++) {
+                const idx = i * 4;
+                if (pixels[idx + 3] === 0) {
+                    labPixels[i] = null;
+                } else {
+                    labPixels[i] = rgbToLab(pixels[idx], pixels[idx + 1], pixels[idx + 2]);
+                }
+            }
+
+            // ------------------------------------------------------------------------
+            // PASSO 1: EXTRAÇÃO GLOBAL DA PALETA DOMINANTE (Para o Identificador Visual)
+            // ------------------------------------------------------------------------
+            const paletteClusters = []; // { sumR, sumG, sumB, sumL, sumA, sumB_lab, count, avgRgb, avgLab, trailerRgb }
+            const clusterThreshold = state.tolerance * 1.1;
+
+            for (let i = 0; i < width * height; i++) {
+                const lab = labPixels[i];
+                if (!lab) continue;
+                const idx = i * 4;
+                const r = pixels[idx], g = pixels[idx + 1], b = pixels[idx + 2];
+
+                let bestCluster = null;
+                let minDist = Infinity;
+
+                for (let c = 0; c < paletteClusters.length; c++) {
+                    const cl = paletteClusters[c];
+                    const dist = deltaE76(lab, cl.avgLab);
+                    if (dist < clusterThreshold && dist < minDist) {
+                        minDist = dist;
+                        bestCluster = cl;
+                    }
+                }
+
+                if (bestCluster) {
+                    bestCluster.sumR += r;
+                    bestCluster.sumG += g;
+                    bestCluster.sumB += b;
+                    bestCluster.sumL += lab[0];
+                    bestCluster.sumA += lab[1];
+                    bestCluster.sumB_lab += lab[2];
+                    bestCluster.count++;
+                    const n = bestCluster.count;
+                    bestCluster.avgLab = [bestCluster.sumL / n, bestCluster.sumA / n, bestCluster.sumB_lab / n];
+                } else {
+                    paletteClusters.push({
+                        sumR: r, sumG: g, sumB: b,
+                        sumL: lab[0], sumA: lab[1], sumB_lab: lab[2],
+                        count: 1,
+                        avgLab: [lab[0], lab[1], lab[2]]
+                    });
+                }
+            }
+
+            // Ordena grupos de cor dos mais frequentes para os detalhes menores
+            paletteClusters.sort((a, b) => b.count - a.count);
+
+            // Calcula cor original média e cor convertida Trailer para cada cluster da paleta
+            paletteClusters.forEach(cl => {
+                const origR = Math.round(cl.sumR / cl.count);
+                const origG = Math.round(cl.sumG / cl.count);
+                const origB = Math.round(cl.sumB / cl.count);
+                cl.origRgb = [origR, origG, origB];
+                cl.trailerRgb = stylizeColorToTrailer(origR, origG, origB, isFlatMode, vibranceBoost, lightBoost, 'base');
+            });
+
+            // Atribui cada pixel ao cluster global mais próximo (para destaque interativo)
+            const pixelClusterMap = new Int16Array(width * height).fill(-1);
+            for (let i = 0; i < width * height; i++) {
+                const lab = labPixels[i];
+                if (!lab) continue;
+                let bestIdx = 0;
+                let minD = Infinity;
+                for (let c = 0; c < paletteClusters.length; c++) {
+                    const d = deltaE76(lab, paletteClusters[c].avgLab);
+                    if (d < minD) {
+                        minD = d;
+                        bestIdx = c;
+                    }
+                }
+                pixelClusterMap[i] = bestIdx;
+            }
+
+            // Renderiza os quadradinhos no painel "Identificador de Paleta"
+            renderPaletteUI(paletteClusters);
+
+            // ------------------------------------------------------------------------
+            // PASSO 2: AGRUPAMENTO POR REGIÕES CONECTADAS (FLOOD-FILL SEM FALHAS)
+            // Evita pixels perdidos no meio de degradês e impede vazamento entre áreas
+            // ------------------------------------------------------------------------
+            const visited = new Uint8Array(width * height);
+            const dirs = [
+                [1, 0], [-1, 0], [0, 1], [0, -1]
+            ];
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const startIdx = y * width + x;
+                    if (visited[startIdx] || !labPixels[startIdx]) continue;
+
+                    // Inicia BFS para encontrar toda a mancha conectada de degradê
+                    const regionIndices = [];
+                    const queue = [startIdx];
+                    visited[startIdx] = 1;
+
+                    let sumR = 0, sumG = 0, sumB = 0;
+                    let sumL = 0, sumA = 0, sumBLab = 0;
+                    let minLum = 100, maxLum = 0;
+
+                    while (queue.length > 0) {
+                        const curr = queue.shift();
+                        regionIndices.push(curr);
+
+                        const cIdx = curr * 4;
+                        const r = pixels[cIdx], g = pixels[cIdx + 1], b = pixels[cIdx + 2];
+                        const cLab = labPixels[curr];
+
+                        sumR += r; sumG += g; sumB += b;
+                        sumL += cLab[0]; sumA += cLab[1]; sumBLab += cLab[2];
+                        if (cLab[0] < minLum) minLum = cLab[0];
+                        if (cLab[0] > maxLum) maxLum = cLab[0];
+
+                        const cx = curr % width;
+                        const cy = (curr - cx) / width;
+                        const countNow = regionIndices.length;
+                        const regionAvgLab = [sumL / countNow, sumA / countNow, sumBLab / countNow];
+
+                        for (let d = 0; d < 4; d++) {
+                            const nx = cx + dirs[d][0];
+                            const ny = cy + dirs[d][1];
+                            if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+
+                            const nIdx = ny * width + nx;
+                            if (visited[nIdx] || !labPixels[nIdx]) continue;
+
+                            const nLab = labPixels[nIdx];
+                            // Compara tanto com o pixel vizinho imediato quanto com a média da região
+                            // para não derivar em degradês muito longos, mas fundir degraus suaves sem buracos
+                            const stepDist = deltaE76(cLab, nLab);
+                            const regionDist = deltaE76(regionAvgLab, nLab);
+
+                            // Preserva detalhes escuros finos (ex: pupilas, contorno de boca)
+                            const isExtremeContrast = Math.abs(cLab[0] - nLab[0]) > (isFlatMode ? 26 : 19);
+
+                            if (!isExtremeContrast && stepDist <= neighborThreshold && regionDist <= neighborThreshold * 1.35) {
+                                visited[nIdx] = 1;
+                                queue.push(nIdx);
+                            }
+                        }
+                    }
+
+                    // Calcula a cor representativa limpa da região conectada
+                    const regCount = regionIndices.length;
+                    const avgR = Math.round(sumR / regCount);
+                    const avgG = Math.round(sumG / regCount);
+                    const avgB = Math.round(sumB / regCount);
+
+                    // Cor principal estilizada (estilo Trailer / Bare Bones)
+                    const baseTrailerColor = stylizeColorToTrailer(
+                        avgR, avgG, avgB, isFlatMode, vibranceBoost, lightBoost, 'base'
+                    );
+
+                    // Cor secundária de sombra bem mínima (usada apenas no modo 'minimal' quando há variação real)
+                    const shadowTrailerColor = stylizeColorToTrailer(
+                        avgR, avgG, avgB, isFlatMode, vibranceBoost, lightBoost, 'shadow'
+                    );
+
+                    const lumSpread = maxLum - minLum;
+                    const midLum = (minLum + maxLum) * 0.5;
+
+                    // Preenche todos os pixels da região conectada sem deixar falhas
+                    for (let k = 0; k < regCount; k++) {
+                        const pIdx = regionIndices[k];
+                        const outOffset = pIdx * 4;
+                        const origAlpha = pixels[outOffset + 3];
+
+                        let chosenColor = baseTrailerColor;
+
+                        // Se estiver no modo "Sombra Bem Mínima" e a região tiver variação suficiente (> 7 L*),
+                        // aplica apenas 2 níveis limpos (base iluminada + sombra mínima suave)
+                        if (!isFlatMode && lumSpread > 7 && regCount > 2) {
+                            const pLum = labPixels[pIdx][0];
+                            if (pLum < midLum - 1.2) {
+                                chosenColor = shadowTrailerColor;
+                            }
+                        }
+
+                        // Se o usuário clicou em um grupo no Identificador de Paleta para destacar
+                        if (state.highlightedCluster !== -1 && pixelClusterMap[pIdx] !== state.highlightedCluster) {
+                            // Escurece levemente os outros grupos apenas na pré-visualização
+                            outPixels[outOffset] = Math.round(chosenColor[0] * 0.28);
+                            outPixels[outOffset + 1] = Math.round(chosenColor[1] * 0.28);
+                            outPixels[outOffset + 2] = Math.round(chosenColor[2] * 0.28);
+                            outPixels[outOffset + 3] = origAlpha;
+                        } else {
+                            outPixels[outOffset] = chosenColor[0];
+                            outPixels[outOffset + 1] = chosenColor[1];
+                            outPixels[outOffset + 2] = chosenColor[2];
+                            outPixels[outOffset + 3] = origAlpha;
+                        }
+                    }
+                }
+            }
+
+            rawProcCtx.putImageData(outData, 0, 0);
+
+            // Atualiza os previews 2D visíveis
+            prevOrigCtx.clearRect(0, 0, 64, 64);
+            prevOrigCtx.drawImage(rawOrigCanvas, 0, 0);
+
+            prevResCtx.clearRect(0, 0, 64, 64);
+            prevResCtx.drawImage(rawProcCanvas, 0, 0);
+
+            // Atualiza a textura do boneco 3D
+            update3DSkinTexture();
+        }
+
+        /**
+         * Converte uma cor média RGB para a paleta vibrante e limpa dos Trailers do Minecraft
+         */
+        function stylizeColorToTrailer(r, g, b, isFlatMode, vibranceBoost, lightBoost, toneRole = 'base') {
+            let [h, s, l] = rgbToHsl(r, g, b);
+
+            // Preserva pretos profundos (pupilas/contornos) sem lavar demais
+            if (l > 0.12) {
+                if (isFlatMode) {
+                    // Sem Muita Sombra: puxa sombras médias para um patamar luminoso uniforme
+                    const anchor = 0.56;
+                    l = anchor + (l - anchor) * 0.52;
+                } else {
+                    // Com Sombra Bem Mínima: base iluminada + sombra sutil controlada
+                    const anchor = 0.54;
+                    l = anchor + (l - anchor) * 0.72;
+                    if (toneRole === 'shadow') {
+                        l = clamp(l - 0.055, 0.08, 0.92);
+                    }
+                }
+            }
+
+            // Vibração característica dos trailers oficiais
+            if (s > 0.04) {
+                const satGain = 1 + vibranceBoost * (1 - s * 0.42);
+                s = clamp(s * satGain, 0, 0.96);
+            }
+
+            // Ajuste fino de luminosidade do slider
+            l = clamp(l + lightBoost * (1 - Math.abs(l - 0.5)), 0.04, 0.96);
+
+            return hslToRgb(h, s, l);
+        }
+
+        /**
+         * Renderiza os swatches interativos no Identificador de Paleta
+         */
+        function renderPaletteUI(clusters) {
+            const container = document.getElementById('paletteSwatchesContainer');
+            const countBadge = document.getElementById('paletteCountBadge');
+            container.innerHTML = '';
+
+            // Limita exibição aos 18 grupos principais para manter a interface limpa
+            const displayClusters = clusters.slice(0, 18);
+            countBadge.textContent = `${clusters.length} ${clusters.length === 1 ? 'grupo' : 'grupos'}`;
+
+            displayClusters.forEach((cl, idx) => {
+                const origHex = rgbToHex(cl.origRgb[0], cl.origRgb[1], cl.origRgb[2]);
+                const trailerHex = rgbToHex(cl.trailerRgb[0], cl.trailerRgb[1], cl.trailerRgb[2]);
+                const isSelected = state.highlightedCluster === idx;
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `flex items-center justify-between p-1.5 rounded border text-left transition cursor-pointer ${
+                    isSelected 
+                        ? 'bg-[#2B3E24] border-[#8CE665] ring-1 ring-[#8CE665]' 
+                        : 'bg-[#1D1D1D] border-[#3A3A3A] hover:border-[#6E6E6E]'
+                }`;
+                btn.title = `Original: ${origHex} → Trailer: ${trailerHex} (${cl.count} px)`;
+
+                btn.innerHTML = `
+                    <div class="flex items-center gap-1.5 min-w-0">
+                        <span class="w-4 h-4 rounded-xs border border-black shrink-0" style="background-color: ${origHex};"></span>
+                        <span class="text-[10px] text-gray-500">→</span>
+                        <span class="w-4 h-4 rounded-xs border border-black shrink-0" style="background-color: ${trailerHex};"></span>
+                        <span class="text-[10px] font-mono text-gray-200 truncate">${trailerHex}</span>
+                    </div>
+                    <span class="text-[9px] text-gray-400 font-mono ml-1">${cl.count}p</span>
+                `;
+
+                btn.addEventListener('click', () => {
+                    state.highlightedCluster = (state.highlightedCluster === idx) ? -1 : idx;
+                    updateHighlightBanner(trailerHex);
+                    processSkin();
+                });
+
+                container.appendChild(btn);
+            });
+        }
+
+        function updateHighlightBanner(hex = '') {
+            const hint = document.getElementById('paletteFilterHint');
+            const text = document.getElementById('paletteFilterText');
+            if (state.highlightedCluster === -1) {
+                hint.classList.add('hidden');
+            } else {
+                hint.classList.remove('hidden');
+                text.textContent = `Destacando tom ${hex} na skin`;
+            }
+        }
+
+        /**
+         * Utilitários Matemáticos e Conversão de Cores (RGB <-> HSL & CIELAB)
+         */
+        function clamp(val, min, max) {
+            return Math.max(min, Math.min(max, val));
+        }
+
+        function hexToRgb(hex) {
+            const clean = hex.replace('#', '');
+            const num = parseInt(clean, 16);
+            return {
+                r: (num >> 16) & 255,
+                g: (num >> 8) & 255,
+                b: num & 255
+            };
+        }
+
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+        }
+
+        function rgbToLab(r, g, b) {
+            let lr = r / 255, lg = g / 255, lb = b / 255;
+            lr = lr > 0.04045 ? Math.pow((lr + 0.055) / 1.055, 2.4) : lr / 12.92;
+            lg = lg > 0.04045 ? Math.pow((lg + 0.055) / 1.055, 2.4) : lg / 12.92;
+            lb = lb > 0.04045 ? Math.pow((lb + 0.055) / 1.055, 2.4) : lb / 12.92;
+
+            let x = (lr * 0.4124 + lg * 0.3576 + lb * 0.1805) / 0.95047;
+            let y = (lr * 0.2126 + lg * 0.7152 + lb * 0.0722) / 1.00000;
+            let z = (lr * 0.0193 + lg * 0.1192 + lb * 0.9505) / 1.08883;
+
+            x = x > 0.008856 ? Math.pow(x, 1 / 3) : (7.787 * x) + 16 / 116;
+            y = y > 0.008856 ? Math.pow(y, 1 / 3) : (7.787 * y) + 16 / 116;
+            z = z > 0.008856 ? Math.pow(z, 1 / 3) : (7.787 * z) + 16 / 116;
+
+            return [(116 * y) - 16, 500 * (x - y), 200 * (y - z)];
+        }
+
+        function deltaE76(lab1, lab2) {
+            const dL = lab1[0] - lab2[0];
+            const da = lab1[1] - lab2[1];
+            const db = lab1[2] - lab2[2];
+            return Math.sqrt(dL * dL + da * da + db * db);
+        }
                 }
             }
 
@@ -1247,16 +1761,23 @@
 
         /**
          * Mapeamento UV Padrão de Cubos de Skin do Minecraft (64x64)
-         * Ordem das faces no BoxGeometry do Three.js:
-         * 0: Right (+X), 1: Left (-X), 2: Top (+Y), 3: Bottom (-Y), 4: Front (+Z), 5: Back (-Z)
+         * Corrige a orientação da 2ª camada (Hat/Overlay):
+         * - Front (+Z, faceIndex 4) mapeia exatamente para (u + d, v + d, w, h) -> ex: Chapéu (40, 8, 8, 8)
+         * - Back (-Z, faceIndex 5) mapeia exatamente para (u + 2d + w, v + d, w, h) -> ex: Nuca do Chapéu (56, 8, 8, 8)
+         * - Right (+X, faceIndex 0) -> (u, v + d, d, h) -> Lado direito do boneco (-X na tela)
+         * - Left (-X, faceIndex 1) -> (u + d + w, v + d, d, h) -> Lado esquerdo do boneco (+X na tela)
          */
         function setMinecraftBoxUVs(geometry, u, v, w, h, d, texW, texH) {
             const uvAttr = geometry.attributes.uv;
 
-            function applyFaceUV(faceIndex, x, y, width, height) {
-                const u0 = x / texW;
-                const u1 = (x + width) / texW;
-                // No Three.js, V=1 é o topo da imagem e V=0 é a base
+            function applyFaceUV(faceIndex, x, y, width, height, flipX = false) {
+                let u0 = x / texW;
+                let u1 = (x + width) / texW;
+                if (flipX) {
+                    const temp = u0;
+                    u0 = u1;
+                    u1 = temp;
+                }
                 const v1 = 1 - (y / texH);
                 const v0 = 1 - ((y + height) / texH);
 
@@ -1267,18 +1788,19 @@
                 uvAttr.setXY(idx + 3, u1, v0);
             }
 
-            // Face Right (+X -> Lado esquerdo do personagem na tela / Right UV box)
-            applyFaceUV(0, u, v + d, d, h);
-            // Face Left (-X -> Lado direito do personagem na tela / Left UV box)
-            applyFaceUV(1, u + d + w, v + d, d, h);
-            // Face Top (+Y)
-            applyFaceUV(2, u + d, v, w, d);
-            // Face Bottom (-Y)
-            applyFaceUV(3, u + d + w, v, w, d);
-            // Face Front (+Z)
-            applyFaceUV(4, u + d, v + d, w, h);
-            // Face Back (-Z)
-            applyFaceUV(5, u + d + w + d, v + d, w, h);
+            // No BoxGeometry do Three.js:
+            // index 0 = +X (lado esquerdo visual do jogador olhando para +Z -> Left do personagem na textura Minecraft: u + d + w)
+            // index 1 = -X (lado direito visual do jogador olhando para +Z -> Right do personagem na textura Minecraft: u)
+            applyFaceUV(0, u + d + w, v + d, d, h, false);
+            applyFaceUV(1, u, v + d, d, h, false);
+            // index 2 = +Y (Top)
+            applyFaceUV(2, u + d, v, w, d, false);
+            // index 3 = -Y (Bottom)
+            applyFaceUV(3, u + d + w, v, w, d, false);
+            // index 4 = +Z (Front -> Rosto em (8,8) e Frente do Chapéu em (40,8))
+            applyFaceUV(4, u + d, v + d, w, h, false);
+            // index 5 = -Z (Back -> Nuca em (24,8) e Atrás do Chapéu em (56,8))
+            applyFaceUV(5, u + d + w + d, v + d, w, h, false);
 
             uvAttr.needsUpdate = true;
         }
@@ -1289,15 +1811,15 @@
             skinTexture.needsUpdate = true;
         }
 
-        /**
-         * ============================================================================
-         * EVENTOS DE CONTROLE DA INTERFACE
-         * ============================================================================
-         */
-        // Botões de Exemplo
+        // Botões de Exemplo (Carregam Steve_BE_skin.webp e Alex_BE_skin.webp)
         document.getElementById('btnLoadSteve').addEventListener('click', () => {
-            generateExampleSkin('steve');
-            showToast('Skin de exemplo (Steve) carregada!');
+            loadExampleSkin('steve');
+            showToast('Carregando Steve_BE_skin.webp...');
+        });
+
+        document.getElementById('btnLoadAlex').addEventListener('click', () => {
+            loadExampleSkin('alex');
+            showToast('Carregando Alex_BE_skin.webp...');
         });
 
         document.getElementById('btnLoadAlex').addEventListener('click', () => {
@@ -1355,17 +1877,37 @@
             state.vibrance = 55;
             state.smoothing = 72;
             state.brightness = 8;
+            state.tolerance = 38;
+            state.highlightedCluster = -1;
 
             sliderVibrance.value = 55;
             sliderSmoothing.value = 72;
             sliderBrightness.value = 8;
+            document.getElementById('sliderTolerance').value = 38;
 
             document.getElementById('valVibrance').textContent = '+35%';
             document.getElementById('valSmoothing').textContent = 'Alto';
             document.getElementById('valBrightness').textContent = '+8%';
+            document.getElementById('valTolerance').textContent = '38';
+            updateHighlightBanner();
 
             processSkin();
             showToast('Ajustes de paleta restaurados ao padrão de trailer.');
+        });
+
+        // Controles do Identificador de Paleta
+        document.getElementById('sliderTolerance').addEventListener('input', (e) => {
+            state.tolerance = parseInt(e.target.value, 10);
+            state.highlightedCluster = -1;
+            updateHighlightBanner();
+            document.getElementById('valTolerance').textContent = state.tolerance;
+            processSkin();
+        });
+
+        document.getElementById('btnClearPaletteHighlight').addEventListener('click', () => {
+            state.highlightedCluster = -1;
+            updateHighlightBanner();
+            processSkin();
         });
 
         // Botões da Pré-visualização (2ª Camada, Grade 64x64, Girar)
@@ -1417,6 +1959,13 @@
          */
         document.getElementById('btnDownloadSkin').addEventListener('click', () => {
             try {
+                // Garante que o arquivo baixado nunca saia escurecido por algum destaque temporário da paleta
+                const prevHighlight = state.highlightedCluster;
+                if (prevHighlight !== -1) {
+                    state.highlightedCluster = -1;
+                    processSkin();
+                }
+
                 const dataURL = rawProcCanvas.toDataURL('image/png');
                 const link = document.createElement('a');
                 link.download = state.skinFileName || 'minecraft_trailer_skin_64x64.png';
@@ -1424,6 +1973,12 @@
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+
+                if (prevHighlight !== -1) {
+                    state.highlightedCluster = prevHighlight;
+                    processSkin();
+                }
+
                 showToast('Download iniciado! Skin 64x64 pronta para o Minecraft.', 'success');
             } catch (err) {
                 console.error('Erro ao exportar skin:', err);
@@ -1434,8 +1989,9 @@
         // Inicialização ao carregar a janela
         window.onload = function() {
             init3DViewer();
-            generateExampleSkin('steve');
+            loadExampleSkin('steve');
         };
     </script>
 </body>
 </html>
+```
