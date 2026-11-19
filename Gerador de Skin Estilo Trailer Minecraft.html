@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Trailer Skin Styler - Estilo Bare Bones</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js para Visualizador 3D Interativo da Skin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Fontes Google (Press Start 2P + Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Estilos personalizados temáticos de Minecraft */
+        :root {
+            --mc-grass-top: #5D9C42;
+            --mc-grass-dark: #3E6E29;
+            --mc-dirt: #79553A;
+            --mc-dirt-dark: #593D29;
+            --mc-stone: #7D7D7D;
+            --mc-stone-dark: #4A4A4A;
+            --mc-panel: #C6C6C6;
+            --mc-panel-border-light: #FFFFFF;
+            --mc-panel-border-dark: #555555;
+            --mc-btn-green: #3C8527;
+            --mc-btn-green-hover: #499E30;
+            --mc-btn-green-shadow: #1D4D13;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1e241b;
+            background-image: 
+                radial-gradient(rgba(93, 156, 66, 0.12) 2px, transparent 2px),
+                radial-gradient(rgba(121, 85, 58, 0.1) 2px, #191f17 2px);
+            background-size: 32px 32px;
+            background-position: 0 0, 16px 16px;
+            color: #F3F4F6;
+            overflow-x: hidden;
+        }
+
+        .font-pixel {
+            font-family: 'Press Start 2P', cursive;
+            line-height: 1.4;
+        }
+
+        .font-vt {
+            font-family: 'VT323', monospace;
+        }
+
+        /* Estilo de Painel Clássico GUI do Minecraft */
+        .mc-panel {
+            background-color: #2B2B2B;
+            border: 4px solid #141414;
+            box-shadow: 
+                inset 4px 4px 0px #484848,
+                inset -4px -4px 0px #1C1C1C,
+                0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .mc-panel-light {
+            background-color: #C6C6C6;
+            color: #222222;
+            border: 4px solid #1E1E1E;
+            box-shadow: 
+                inset 4px 4px 0px #FFFFFF,
+                inset -4px -4px 0px #555555;
+        }
+
+        /* Botão Clássico 3D Minecraft */
+        .mc-btn {
+            position: relative;
+            background-color: #7D7D7D;
+            color: #FFFFFF;
+            text-shadow: 2px 2px 0px #222222;
+            border: 3px solid #181818;
+            box-shadow: 
+                inset 3px 3px 0px #A8A8A8,
+                inset -3px -3px 0px #4A4A4A;
+            transition: transform 0.06s ease, background-color 0.1s ease;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .mc-btn:hover {
+            background-color: #8E8E8E;
+            box-shadow: 
+                inset 3px 3px 0px #BDBDBD,
+                inset -3px -3px 0px #585858;
+        }
+
+        .mc-btn:active {
+            transform: translateY(2px);
+            box-shadow: 
+                inset 3px 3px 0px #4A4A4A,
+                inset -3px -3px 0px #A8A8A8;
+        }
+
+        /* Botão Verde Grama / Esmeralda */
+        .mc-btn-green {
+            background-color: #3C8527;
+            text-shadow: 2px 2px 0px #1A3E10;
+            box-shadow: 
+                inset 3px 3px 0px #63B947,
+                inset -3px -3px 0px #235315;
+        }
+
+        .mc-btn-green:hover {
+            background-color: #489C30;
+            box-shadow: 
+                inset 3px 3px 0px #79D45B,
+                inset -3px -3px 0px #2A6319;
+        }
+
+        .mc-btn-green:active {
+            transform: translateY(2px);
+            box-shadow: 
+                inset 3px 3px 0px #235315,
+                inset -3px -3px 0px #63B947;
+        }
+
+        /* Botão Azul Diamante */
+        .mc-btn-diamond {
+            background-color: #28899E;
+            text-shadow: 2px 2px 0px #0F3E49;
+            box-shadow: 
+                inset 3px 3px 0px #55CBE3,
+                inset -3px -3px 0px #165463;
+        }
+
+        .mc-btn-diamond:hover {
+            background-color: #319EB5;
+            box-shadow: 
+                inset 3px 3px 0px #7AE1F5,
+                inset -3px -3px 0px #1C6678;
+        }
+
+        /* Estado Ativo para Botões Toggle */
+        .mc-toggle-active {
+            background-color: #3C8527 !important;
+            border-color: #A6FF85 !important;
+            box-shadow: 
+                inset 3px 3px 0px #6BC94D,
+                inset -3px -3px 0px #1E4C11,
+                0 0 12px rgba(93, 214, 58, 0.45) !important;
+        }
+
+        /* Renderização nítida de Pixel Art */
+        .pixelated {
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-crisp-edges;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        /* Fundo quadriculado para transparência Alpha */
+        .checkerboard {
+            background-color: #202020;
+            background-image: 
+                linear-gradient(45deg, #2d2d2d 25%, transparent 25%), 
+                linear-gradient(-45deg, #2d2d2d 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #2d2d2d 75%), 
+                linear-gradient(-45deg, transparent 75%, #2d2d2d 75%);
+            background-size: 16px 16px;
+            background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+        }
+
+        /* Custom Range Slider estilo Minecraft */
+        input[type="range"].mc-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 14px;
+            background: #1A1A1A;
+            border: 2px solid #555555;
+            outline: none;
+        }
+
+        input[type="range"].mc-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 26px;
+            background: #8E8E8E;
+            border: 2px solid #141414;
+            box-shadow: inset 2px 2px 0px #CCCCCC, inset -2px -2px 0px #4A4A4A;
+            cursor: pointer;
+        }
+
+        input[type="range"].mc-slider::-webkit-slider-thumb:hover {
+            background: #5D9C42;
+            box-shadow: inset 2px 2px 0px #8BE067, inset -2px -2px 0px #2F5C1D;
+        }
+
+        /* Barra superior estilo Bloco de Grama */
+        .grass-header-border {
+            border-bottom: 8px solid #593D29;
+            position: relative;
+        }
+        .grass-header-border::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: repeating-linear-gradient(
+                90deg,
+                #5D9C42 0px,
+                #5D9C42 16px,
+                #4A8232 16px,
+                #4A8232 32px,
+                #79553A 32px,
+                #79553A 48px
+            );
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Cabeçalho Temático Minecraft -->
+    <header class="bg-[#232b20] grass-header-border py-5 px-4 shadow-xl">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <!-- Ícone Bloco de Grama SVG -->
+                <div class="w-14 h-14 shrink-0 flex items-center justify-center bg-[#181e16] border-2 border-[#5D9C42] rounded-lg p-1.5 shadow-lg">
+                    <svg viewBox="0 0 16 16" class="w-full h-full pixelated" shape-rendering="crispEdges">
+                        <!-- Grama Topo -->
+                        <rect x="0" y="0" width="16" height="4" fill="#5D9C42"/>
+                        <rect x="2" y="0" width="4" height="2" fill="#73BD53"/>
+                        <rect x="10" y="1" width="4" height="2" fill="#4A8232"/>
+                        <!-- Dentes da Grama -->
+                        <rect x="0" y="4" width="3" height="2" fill="#5D9C42"/>
+                        <rect x="5" y="4" width="2" height="3" fill="#5D9C42"/>
+                        <rect x="9" y="4" width="4" height="2" fill="#5D9C42"/>
+                        <rect x="14" y="4" width="2" height="3" fill="#4A8232"/>
+                        <!-- Terra -->
+                        <rect x="0" y="6" width="16" height="10" fill="#79553A"/>
+                        <rect x="3" y="4" width="2" height="2" fill="#79553A"/>
+                        <rect x="7" y="4" width="2" height="2" fill="#79553A"/>
+                        <rect x="13" y="4" width="1" height="2" fill="#79553A"/>
+                        <!-- Pedrinhas na Terra -->
+                        <rect x="2" y="8" width="2" height="2" fill="#593D29"/>
+                        <rect x="10" y="7" width="3" height="2" fill="#593D29"/>
+                        <rect x="6" y="11" width="2" height="2" fill="#91684A"/>
+                        <rect x="12" y="12" width="2" height="2" fill="#593D29"/>
+                        <rect x="1" y="13" width="3" height="2" fill="#473020"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h1 class="font-pixel text-base sm:text-xl md:text-2xl text-white tracking-wide drop-shadow-[3px_3px_0_#141414]">
+                            TRAILER SKIN STYLER
+                        </h1>
+                        <span class="bg-[#5D9C42] text-white font-pixel text-[10px] px-2 py-1 rounded border border-[#2c4e1e]">
+                            64x64
+                        </span>
+                    </div>
+                    <p class="text-gray-300 text-xs sm:text-sm mt-1">
+                        Transforme qualquer skin no visual vibrante e limpo dos <span class="text-[#8CE665] font-semibold">Trailers Oficiais & Bare Bones</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Botão Rápido de Exemplo -->
+            <div class="flex items-center gap-2 flex-wrap justify-center">
+                <button id="btnLoadSteve" class="mc-btn px-3 py-2.5 rounded text-xs sm:text-sm font-semibold flex items-center gap-2">
+                    <span class="w-3 h-3 inline-block bg-[#00A8A8] border border-black"></span>
+                    Exemplo: Steve
+                </button>
+                <button id="btnLoadAlex" class="mc-btn px-3 py-2.5 rounded text-xs sm:text-sm font-semibold flex items-center gap-2">
+                    <span class="w-3 h-3 inline-block bg-[#6BA832] border border-black"></span>
+                    Exemplo: Alex/Aventureira
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Notificação / Toast Customizado (Substitui alert) -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4 sm:px-0"></div>
+
+    <!-- Conteúdo Principal -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- COLUNA ESQUERDA: Upload e Controles de Estilo (5 colunas em desktop) -->
+        <section class="lg:col-span-5 flex flex-col gap-6">
+            
+            <!-- Bloco 1: Upload da Skin -->
+            <div class="mc-panel rounded-lg p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-pixel text-xs sm:text-sm text-[#8CE665] flex items-center gap-2">
+                        <span>1.</span> ENVIAR SKIN (.PNG)
+                    </h2>
+                    <span id="skinStatusBadge" class="text-xs bg-[#1C1C1C] text-gray-300 px-2.5 py-1 rounded border border-[#444]">
+                        Skin Exemplo Ativa
+                    </span>
+                </div>
+
+                <!-- Área de Drag & Drop -->
+                <label id="dropZone" for="skinFileInput" class="flex flex-col items-center justify-center border-3 border-dashed border-[#636363] hover:border-[#8CE665] bg-[#1F1F1F] hover:bg-[#252b22] rounded-lg p-6 cursor-pointer transition-all text-center group">
+                    <div class="w-12 h-12 mb-3 bg-[#2E2E2E] group-hover:bg-[#3C8527] rounded-lg flex items-center justify-center border-2 border-[#4E4E4E] transition-colors">
+                        <svg class="w-6 h-6 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                        </svg>
+                    </div>
+                    <span class="font-semibold text-sm text-white group-hover:text-[#A6FF85]">
+                        Clique ou arraste sua Skin PNG aqui
+                    </span>
+                    <span class="text-xs text-gray-400 mt-1">
+                        Formato padrão 64x64 pixels (Java & Bedrock)
+                    </span>
+                    <input type="file" id="skinFileInput" accept="image/png,image/*" class="hidden">
+                </label>
+
+                <!-- Aviso de Dimensão (oculto por padrão) -->
+                <div id="dimensionWarning" class="hidden mt-3 bg-[#4A2E16] border-2 border-[#D9822B] text-[#FFD8A8] text-xs p-3 rounded-lg">
+                    ⚠️ <strong>Aviso:</strong> A imagem enviada não era 64x64px e foi adaptada automaticamente para o padrão 64x64 do Minecraft.
+                </div>
+            </div>
+
+            <!-- Bloco 2: Controle Principal de Sombra (Destaque solicitado pelo usuário) -->
+            <div class="mc-panel rounded-lg p-5">
+                <h2 class="font-pixel text-xs sm:text-sm text-[#61DAE8] mb-2 flex items-center gap-2">
+                    <span>2.</span> MODO DE SOMBRA DO TRAILER
+                </h2>
+                <p class="text-xs text-gray-300 mb-4">
+                    Escolha o nível de sombreamento e degradê nos blocos de cor da sua skin:
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Opção 1: Sem Muita Sombra (Flat / Limpo) -->
+                    <button id="btnShadowFlat" type="button" class="mc-btn mc-toggle-active p-3.5 rounded-lg text-left flex flex-col justify-between transition-all">
+                        <div class="flex items-center justify-between w-full mb-1.5">
+                            <span class="font-bold text-sm text-white">Sem Muita Sombra</span>
+                            <span class="w-4 h-4 rounded-sm bg-[#8CE665] border border-black inline-block"></span>
+                        </div>
+                        <span class="text-[11px] text-gray-100 opacity-90 leading-snug">
+                            Estilo Trailer Limpo (Bare Bones). Achata sombras escuras e cria cores super uniformes.
+                        </span>
+                    </button>
+
+                    <!-- Opção 2: Com Sombra Bem Mínima (Suave) -->
+                    <button id="btnShadowMinimal" type="button" class="mc-btn p-3.5 rounded-lg text-left flex flex-col justify-between transition-all">
+                        <div class="flex items-center justify-between w-full mb-1.5">
+                            <span class="font-bold text-sm text-white">Sombra Bem Mínima</span>
+                            <span class="w-4 h-4 rounded-sm bg-gradient-to-br from-[#8CE665] to-[#3B6B27] border border-black inline-block"></span>
+                        </div>
+                        <span class="text-[11px] text-gray-200 opacity-90 leading-snug">
+                            Degradê suave. Mantém um toque sutil de profundidade nas bordas sem poluição visual.
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bloco 3: Ajuste Fino de Paleta e Degradê -->
+            <div class="mc-panel rounded-lg p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-pixel text-xs sm:text-sm text-[#FFD24C] flex items-center gap-2">
+                        <span>3.</span> PALETA & DEGRADÊ
+                    </h2>
+                    <button id="btnResetSliders" class="text-xs text-gray-300 hover:text-white underline cursor-pointer">
+                        Restaurar Padrão
+                    </button>
+                </div>
+
+                <div class="space-y-5">
+                    <!-- Slider Vibração / Saturação -->
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-1.5">
+                            <label for="sliderVibrance" class="text-gray-200">Vibração das Cores (Estilo Trailer)</label>
+                            <span id="valVibrance" class="text-[#8CE665] font-mono">+35%</span>
+                        </div>
+                        <input type="range" id="sliderVibrance" min="0" max="100" value="55" class="mc-slider rounded">
+                        <div class="flex justify-between text-[10px] text-gray-400 mt-1">
+                            <span>Original</span>
+                            <span>Vibrante (Trailer)</span>
+                            <span>Super Vivo</span>
+                        </div>
+                    </div>
+
+                    <!-- Slider Simplificação de Degradê (Posterização / Agrupamento) -->
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-1.5">
+                            <label for="sliderSmoothing" class="text-gray-200">Limpeza de Ruído & Degradê</label>
+                            <span id="valSmoothing" class="text-[#61DAE8] font-mono">Alto</span>
+                        </div>
+                        <input type="range" id="sliderSmoothing" min="1" max="100" value="72" class="mc-slider rounded">
+                        <div class="flex justify-between text-[10px] text-gray-400 mt-1">
+                            <span>Mais Detalhes</span>
+                            <span>Limpo (Bare Bones)</span>
+                            <span>Ultra Flat</span>
+                        </div>
+                    </div>
+
+                    <!-- Slider Brilho / Luminosidade -->
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-1.5">
+                            <label for="sliderBrightness" class="text-gray-200">Luminosidade das Cores</label>
+                            <span id="valBrightness" class="text-[#FFD24C] font-mono">+8%</span>
+                        </div>
+                        <input type="range" id="sliderBrightness" min="-20" max="35" value="8" class="mc-slider rounded">
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- COLUNA DIREITA: Pré-visualização 3D, Comparação 2D e Download (7 colunas em desktop) -->
+        <section class="lg:col-span-7 flex flex-col gap-6">
+            
+            <!-- Bloco de Pré-visualização Principal -->
+            <div class="mc-panel rounded-lg p-5 flex-1 flex flex-col">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <h2 class="font-pixel text-xs sm:text-sm text-white flex items-center gap-2">
+                        <span>4.</span> PRÉ-VISUALIZAÇÃO
+                    </h2>
+
+                    <!-- Controles de Visualização -->
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button id="btnToggleHat" class="mc-btn mc-toggle-active px-2.5 py-1.5 rounded text-xs font-semibold">
+                            2ª Camada (Chapéu/Roupa): ON
+                        </button>
+                        <button id="btnToggleGrid" class="mc-btn px-2.5 py-1.5 rounded text-xs font-semibold">
+                            Grade 64x64: OFF
+                        </button>
+                        <button id="btnFlipModel" class="mc-btn px-2.5 py-1.5 rounded text-xs font-semibold">
+                            Girar Frente/Costas
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Grid de Visualização: Boneco 3D + Comparação de Texturas -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 flex-1">
+                    
+                    <!-- Visualizador 3D Interativo (7 colunas) -->
+                    <div class="md:col-span-7 bg-[#181D16] border-3 border-[#111] rounded-lg relative overflow-hidden flex flex-col min-h-[340px]">
+                        <div class="absolute top-2.5 left-3 z-10 bg-black/65 backdrop-blur-xs px-2.5 py-1 rounded text-[11px] text-gray-200 border border-white/10 pointer-events-none">
+                            🖱️ Arraste para girar o personagem 3D
+                        </div>
+                        
+                        <!-- Seletor Rápido no 3D: Ver Original vs Ver Estilo Trailer -->
+                        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex bg-black/80 p-1 rounded-lg border border-white/15">
+                            <button id="btn3DTrailer" class="px-3 py-1 rounded text-xs font-bold bg-[#3C8527] text-white transition">
+                                Estilo Trailer
+                            </button>
+                            <button id="btn3DOriginal" class="px-3 py-1 rounded text-xs font-bold text-gray-300 hover:text-white transition">
+                                Original
+                            </button>
+                        </div>
+
+                        <!-- Container Three.js -->
+                        <div id="threeContainer" class="w-full h-full flex-1 cursor-grab active:cursor-grabbing"></div>
+                    </div>
+
+                    <!-- Comparação Lado a Lado das Texturas 64x64 (5 colunas) -->
+                    <div class="md:col-span-5 flex flex-col justify-between gap-3">
+                        
+                        <!-- Textura Original -->
+                        <div class="bg-[#1C1C1C] border-2 border-[#3E3E3E] rounded-lg p-3 flex flex-col items-center">
+                            <div class="w-full flex justify-between items-center mb-2">
+                                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Original (64x64)</span>
+                                <span class="text-[10px] text-gray-500">Antes</span>
+                            </div>
+                            <div class="relative w-36 h-36 sm:w-40 sm:h-40 checkerboard border-2 border-[#4A4A4A] rounded overflow-hidden">
+                                <canvas id="previewOriginalCanvas" width="64" height="64" class="w-full h-full pixelated"></canvas>
+                                <div class="grid-overlay hidden absolute inset-0 pointer-events-none" style="background-size: calc(100%/64) calc(100%/64); background-image: linear-gradient(to right, rgba(255,255,255,0.18) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.18) 1px, transparent 1px);"></div>
+                            </div>
+                        </div>
+
+                        <!-- Seta Indicativa -->
+                        <div class="flex items-center justify-center text-[#8CE665] text-xs font-pixel gap-2">
+                            <span>▼</span> ESTILO TRAILER <span>▼</span>
+                        </div>
+
+                        <!-- Textura Transformada (Trailer Style) -->
+                        <div class="bg-[#1E291B] border-2 border-[#5D9C42] rounded-lg p-3 flex flex-col items-center shadow-[0_0_15px_rgba(93,156,66,0.2)]">
+                            <div class="w-full flex justify-between items-center mb-2">
+                                <span class="text-xs font-bold text-[#8CE665] uppercase tracking-wider">Trailer (64x64)</span>
+                                <span id="activeModeTag" class="text-[10px] bg-[#3C8527] text-white px-1.5 py-0.5 rounded">Sem Muita Sombra</span>
+                            </div>
+                            <div class="relative w-36 h-36 sm:w-40 sm:h-40 checkerboard border-2 border-[#5D9C42] rounded overflow-hidden">
+                                <canvas id="previewResultCanvas" width="64" height="64" class="w-full h-full pixelated"></canvas>
+                                <div class="grid-overlay hidden absolute inset-0 pointer-events-none" style="background-size: calc(100%/64) calc(100%/64); background-image: linear-gradient(to right, rgba(255,255,255,0.22) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.22) 1px, transparent 1px);"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bloco 5: Download Final -->
+            <div class="mc-panel rounded-lg p-5 bg-gradient-to-r from-[#253021] to-[#2B2B2B]">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div>
+                        <h3 class="font-pixel text-xs sm:text-sm text-white mb-1">
+                            PRONTO PARA O JOGO!
+                        </h3>
+                        <p class="text-xs text-gray-300">
+                            Arquivo PNG nativo <strong class="text-[#8CE665]">64x64 pixels</strong> com transparência preservada, compatível com Minecraft Java e Bedrock.
+                        </p>
+                    </div>
+                    
+                    <button id="btnDownloadSkin" class="mc-btn mc-btn-green w-full sm:w-auto px-6 py-4 rounded-lg font-pixel text-xs sm:text-sm text-white flex items-center justify-center gap-3 shrink-0 shadow-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        BAIXAR SKIN 64x64 (.PNG)
+                    </button>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Rodapé Simples -->
+    <footer class="text-center text-xs text-gray-400 py-4 border-t border-white/10 mt-6">
+        Minecraft Trailer Skin Styler • Processamento 100% local no navegador • Inspirado no visual Bare Bones & Trailers Oficiais
+    </footer>
+
+    <!-- Canvas ocultos para processamento exato 64x64 -->
+    <canvas id="rawOriginalCanvas" width="64" height="64" class="hidden"></canvas>
+    <canvas id="rawProcessedCanvas" width="64" height="64" class="hidden"></canvas>
+
+    <script>
+        /**
+         * ============================================================================
+         * MINECRAFT TRAILER SKIN STYLER - LÓGICA PRINCIPAL
+         * ============================================================================
+         */
+
+        // Estado global da aplicação
+        const state = {
+            shadowMode: 'flat', // 'flat' (Sem Muita Sombra) | 'minimal' (Com Sombra Bem Mínima)
+            vibrance: 55,       // 0 a 100
+            smoothing: 72,      // 1 a 100
+            brightness: 8,      // -20 a 35
+            showHat: true,
+            showGrid: false,
+            preview3DMode: 'trailer', // 'trailer' | 'original'
+            skinFileName: 'minecraft_trailer_skin.png'
+        };
+
+        // Referências de Canvas
+        const rawOrigCanvas = document.getElementById('rawOriginalCanvas');
+        const rawOrigCtx = rawOrigCanvas.getContext('2d', { willReadFrequently: true });
+
+        const rawProcCanvas = document.getElementById('rawProcessedCanvas');
+        const rawProcCtx = rawProcCanvas.getContext('2d', { willReadFrequently: true });
+
+        const prevOrigCanvas = document.getElementById('previewOriginalCanvas');
+        const prevOrigCtx = prevOrigCanvas.getContext('2d');
+
+        const prevResCanvas = document.getElementById('previewResultCanvas');
+        const prevResCtx = prevResCanvas.getContext('2d');
+
+        // Desativar suavização nos contextos 2D
+        [rawOrigCtx, rawProcCtx, prevOrigCtx, prevResCtx].forEach(ctx => {
+            ctx.imageSmoothingEnabled = false;
+        });
+
+        /**
+         * Sistema de Notificações (Toast) sem usar alert()
+         */
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            const colors = type === 'success' 
+                ? 'bg-[#254E19] border-[#63B947] text-white' 
+                : type === 'warning'
+                ? 'bg-[#573714] border-[#E09132] text-[#FFE4C4]'
+                : 'bg-[#591C1C] border-[#E04F4F] text-white';
+
+            toast.className = `${colors} border-2 px-4 py-3 rounded-lg shadow-xl text-xs sm:text-sm font-medium flex items-center justify-between gap-3 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto`;
+            toast.innerHTML = `<span>${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            // Animar entrada
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            // Remover após 3.5s
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        /**
+         * ============================================================================
+         * GERADOR DE SKINS DE EXEMPLO 64x64 PROCEDURAIS (STEVE & ALEX/AVENTUREIRA)
+         * Garante que o usuário possa testar imediatamente sem ter um arquivo PNG
+         * ============================================================================
+         */
+        function generateExampleSkin(type = 'steve') {
+            rawOrigCtx.clearRect(0, 0, 64, 64);
+
+            // Função auxiliar para pintar retângulos com variação de ruído natural de skin tradicional
+            function fillNoisyRect(x, y, w, h, baseHex, noiseAmount = 14) {
+                const rgb = hexToRgb(baseHex);
+                for (let py = y; py < y + h; py++) {
+                    for (let px = x; px < x + w; px++) {
+                        // Ruído determinístico baseado na posição para simular texturas clássicas de skin
+                        const hash = Math.sin(px * 12.9898 + py * 78.233) * 43758.5453;
+                        const rand = (hash - Math.floor(hash)) * 2 - 1; // -1 a 1
+                        const delta = Math.round(rand * noiseAmount);
+
+                        const r = clamp(rgb.r + delta, 0, 255);
+                        const g = clamp(rgb.g + delta, 0, 255);
+                        const b = clamp(rgb.b + delta, 0, 255);
+
+                        rawOrigCtx.fillStyle = `rgb(${r},${g},${b})`;
+                        rawOrigCtx.fillRect(px, py, 1, 1);
+                    }
+                }
+            }
+
+            if (type === 'steve') {
+                // --- CABEÇA (0,0 a 32,16) ---
+                // Pele base com ruído clássico
+                fillNoisyRect(0, 0, 32, 16, '#B58463', 15);
+                // Cabelo topo e atrás
+                fillNoisyRect(8, 0, 8, 8, '#3B2718', 12);
+                fillNoisyRect(24, 8, 8, 8, '#3B2718', 12);
+                fillNoisyRect(0, 8, 8, 4, '#3B2718', 12);
+                fillNoisyRect(16, 8, 8, 4, '#3B2718', 12);
+                // Franja no rosto (8,8 a 16,16)
+                fillNoisyRect(8, 8, 8, 2, '#3B2718', 10);
+                rawOrigCtx.fillStyle = '#3B2718';
+                rawOrigCtx.fillRect(8, 10, 1, 1);
+                rawOrigCtx.fillRect(15, 10, 1, 1);
+
+                // Olhos (Rosto: x=8..15, y=8..15)
+                rawOrigCtx.fillStyle = '#FFFFFF';
+                rawOrigCtx.fillRect(9, 12, 1, 1);
+                rawOrigCtx.fillRect(14, 12, 1, 1);
+                rawOrigCtx.fillStyle = '#4A368C';
+                rawOrigCtx.fillRect(10, 12, 1, 1);
+                rawOrigCtx.fillRect(13, 12, 1, 1);
+
+                // Nariz e Boca / Cavanhaque
+                rawOrigCtx.fillStyle = '#946346';
+                rawOrigCtx.fillRect(11, 13, 2, 1);
+                rawOrigCtx.fillStyle = '#52321E';
+                rawOrigCtx.fillRect(10, 14, 4, 1);
+                rawOrigCtx.fillRect(10, 15, 1, 1);
+                rawOrigCtx.fillRect(13, 15, 1, 1);
+
+                // --- CORPO / CAMISA CIANO (16,16 a 40,32) ---
+                fillNoisyRect(16, 16, 24, 16, '#009E9E', 18);
+                // Gola da camisa
+                rawOrigCtx.fillStyle = '#9E6E50';
+                rawOrigCtx.fillRect(22, 20, 4, 1);
+                rawOrigCtx.fillRect(23, 21, 2, 1);
+
+                // --- BRAÇO DIREITO (40,16 a 56,32) & BRAÇO ESQUERDO (32,48 a 48,64) ---
+                fillNoisyRect(40, 16, 16, 16, '#B58463', 14);
+                fillNoisyRect(40, 16, 16, 6, '#009E9E', 16); // Manga
+
+                fillNoisyRect(32, 48, 16, 16, '#B58463', 14);
+                fillNoisyRect(32, 48, 16, 6, '#009E9E', 16); // Manga
+
+                // --- PERNA DIREITA (0,16 a 16,32) & PERNA ESQUERDA (16,48 a 32,64) ---
+                fillNoisyRect(0, 16, 16, 16, '#3B489E', 16);
+                fillNoisyRect(0, 30, 16, 2, '#545454', 10); // Sapato
+
+                fillNoisyRect(16, 48, 16, 16, '#3B489E', 16);
+                fillNoisyRect(16, 62, 16, 2, '#545454', 10); // Sapato
+
+                // --- SEGUNDA CAMADA (HAT / OVERLAY) ---
+                // Fone de ouvido / Óculos na testa para testar transparência
+                rawOrigCtx.fillStyle = '#333333';
+                rawOrigCtx.fillRect(40, 9, 8, 2);
+                rawOrigCtx.fillStyle = '#47D1FF';
+                rawOrigCtx.fillRect(41, 9, 2, 2);
+                rawOrigCtx.fillRect(45, 9, 2, 2);
+
+                state.skinFileName = 'steve_trailer_64x64.png';
+            } else {
+                // --- ALEX / AVENTUREIRA ---
+                fillNoisyRect(0, 0, 32, 16, '#E8B896', 12);
+                // Cabelo Ruivo Vibrante
+                fillNoisyRect(8, 0, 8, 8, '#C95D24', 16);
+                fillNoisyRect(24, 8, 8, 8, '#C95D24', 16);
+                fillNoisyRect(0, 8, 8, 6, '#C95D24', 16);
+                fillNoisyRect(16, 8, 8, 6, '#C95D24', 16);
+                fillNoisyRect(8, 8, 8, 2, '#C95D24', 12);
+                rawOrigCtx.fillStyle = '#C95D24';
+                rawOrigCtx.fillRect(8, 10, 2, 3);
+                rawOrigCtx.fillRect(15, 10, 1, 2);
+
+                // Olhos Verdes
+                rawOrigCtx.fillStyle = '#FFFFFF';
+                rawOrigCtx.fillRect(9, 12, 1, 1);
+                rawOrigCtx.fillRect(14, 12, 1, 1);
+                rawOrigCtx.fillStyle = '#3A8E2B';
+                rawOrigCtx.fillRect(10, 12, 1, 1);
+                rawOrigCtx.fillRect(13, 12, 1, 1);
+
+                // Boca
+                rawOrigCtx.fillStyle = '#C47E66';
+                rawOrigCtx.fillRect(11, 14, 2, 1);
+
+                // Túnica Verde Musgo
+                fillNoisyRect(16, 16, 24, 16, '#659638', 18);
+                // Cinto Marrom
+                fillNoisyRect(16, 28, 24, 2, '#593A22', 10);
+                rawOrigCtx.fillStyle = '#E6B83A';
+                rawOrigCtx.fillRect(23, 28, 2, 2);
+
+                // Braços
+                fillNoisyRect(40, 16, 16, 16, '#E8B896', 12);
+                fillNoisyRect(40, 16, 16, 5, '#659638', 14);
+
+                fillNoisyRect(32, 48, 16, 16, '#E8B896', 12);
+                fillNoisyRect(32, 48, 16, 5, '#659638', 14);
+
+                // Calça Marrom e Botas
+                fillNoisyRect(0, 16, 16, 16, '#523B2B', 15);
+                fillNoisyRect(0, 28, 16, 4, '#383838', 10);
+
+                fillNoisyRect(16, 48, 16, 16, '#523B2B', 15);
+                fillNoisyRect(16, 60, 16, 4, '#383838', 10);
+
+                // Segunda Camada: Mecha de cabelo 3D e Jaqueta
+                rawOrigCtx.fillStyle = '#D96B2B';
+                rawOrigCtx.fillRect(39, 10, 1, 5);
+                rawOrigCtx.fillRect(40, 8, 8, 2);
+
+                state.skinFileName = 'alex_trailer_64x64.png';
+            }
+
+            document.getElementById('dimensionWarning').classList.add('hidden');
+            document.getElementById('skinStatusBadge').textContent = type === 'steve' ? 'Exemplo: Steve' : 'Exemplo: Alex';
+            processSkin();
+        }
+
+        /**
+         * ============================================================================
+         * ALGORITMO DE TRANSFORMAÇÃO ESTILO TRAILERS DO MINECRAFT (BARE BONES)
+         * ============================================================================
+         * Etapas:
+         * 1. Preservação exata do canal Alpha (transparência da 2ª camada).
+         * 2. Suavização espacial inteligente (Bilateral / Edge-Preserving) para remover
+         *    o ruído granulado pixel-a-pixel sem borrar bordas importantes (olhos, boca).
+         * 3. Quantização / Simplificação de Degradê (agrupa tons próximos em blocos limpos).
+         * 4. Controle de Sombra ("Sem Muita Sombra" vs "Sombra Bem Mínima"):
+         *    - Em "Sem Muita Sombra": eleva os tons médios-escuros para achatar o sombreado.
+         *    - Em "Sombra Bem Mínima": mantém uma curva suave de contraste.
+         * 5. Ajuste HSL de vibração/saturação e luminosidade vibrante dos trailers.
+         */
+        function processSkin() {
+            const width = 64;
+            const height = 64;
+            const srcData = rawOrigCtx.getImageData(0, 0, width, height);
+            const pixels = srcData.data;
+
+            const outData = rawProcCtx.createImageData(width, height);
+            const outPixels = outData.data;
+
+            // Parâmetros ajustados pelos controles
+            const isFlatMode = state.shadowMode === 'flat';
+            const smoothFactor = state.smoothing / 100; // 0.01 a 1.0
+            const vibranceBoost = (state.vibrance / 100) * 0.55; // até +55% saturação
+            const lightBoost = state.brightness / 100; // -0.20 a +0.35
+
+            // Limiar de diferença de cor para suavização que preserva bordas (olhos, detalhes)
+            const colorThreshold = isFlatMode 
+                ? 24 + smoothFactor * 42 
+                : 16 + smoothFactor * 30;
+
+            // Número de degraus de quantização (menos degraus = degradê mais simplificado/limpo)
+            const quantLevels = isFlatMode
+                ? Math.max(5, Math.round(18 - smoothFactor * 11))
+                : Math.max(8, Math.round(26 - smoothFactor * 14));
+
+            // Passo 1: Filtro Bilateral (Suaviza ruído dentro da mesma superfície, preserva contornos)
+            const smoothed = new Uint8ClampedArray(pixels.length);
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const idx = (y * width + x) * 4;
+                    const a = pixels[idx + 3];
+
+                    // Preserva pixels totalmente transparentes intactos
+                    if (a === 0) {
+                        smoothed[idx] = 0;
+                        smoothed[idx + 1] = 0;
+                        smoothed[idx + 2] = 0;
+                        smoothed[idx + 3] = 0;
+                        continue;
+                    }
+
+                    const r0 = pixels[idx];
+                    const g0 = pixels[idx + 1];
+                    const b0 = pixels[idx + 2];
+
+                    let sumR = r0 * 2;
+                    let sumG = g0 * 2;
+                    let sumB = b0 * 2;
+                    let weightSum = 2;
+
+                    // Vizinhança 3x3
+                    for (let dy = -1; dy <= 1; dy++) {
+                        const ny = y + dy;
+                        if (ny < 0 || ny >= height) continue;
+
+                        for (let dx = -1; dx <= 1; dx++) {
+                            if (dx === 0 && dy === 0) continue;
+                            const nx = x + dx;
+                            if (nx < 0 || nx >= width) continue;
+
+                            const nIdx = (ny * width + nx) * 4;
+                            const na = pixels[nIdx + 3];
+                            if (na < 128) continue; // Ignora vizinhos transparentes
+
+                            const nr = pixels[nIdx];
+                            const ng = pixels[nIdx + 1];
+                            const nb = pixels[nIdx + 2];
+
+                            // Distância Euclidiana no espaço RGB
+                            const dist = Math.sqrt(
+                                (r0 - nr) * (r0 - nr) +
+                                (g0 - ng) * (g0 - ng) +
+                                (b0 - nb) * (b0 - nb)
+                            );
+
+                            // Só mistura se pertencer à mesma região de cor (não borra olhos/contornos)
+                            if (dist < colorThreshold) {
+                                const w = 1 - (dist / colorThreshold);
+                                sumR += nr * w;
+                                sumG += ng * w;
+                                sumB += nb * w;
+                                weightSum += w;
+                            }
+                        }
+                    }
+
+                    smoothed[idx] = Math.round(sumR / weightSum);
+                    smoothed[idx + 1] = Math.round(sumG / weightSum);
+                    smoothed[idx + 2] = Math.round(sumB / weightSum);
+                    smoothed[idx + 3] = a; // Alpha original exato
+                }
+            }
+
+            // Passo 2: Ajuste de Paleta HSL, Controle de Sombra e Posterização de Degradê
+            for (let i = 0; i < smoothed.length; i += 4) {
+                const a = smoothed[i + 3];
+                if (a === 0) {
+                    outPixels[i + 3] = 0;
+                    continue;
+                }
+
+                let r = smoothed[i];
+                let g = smoothed[i + 1];
+                let b = smoothed[i + 2];
+
+                // Converte para HSL
+                let [h, s, l] = rgbToHsl(r, g, b);
+
+                // A. Controle de Sombra ("Sem Muita Sombra" vs "Com Sombra Bem Mínima")
+                // Não achata pretos absolutos (como pupilas ou contornos muito escuros < 0.14)
+                if (l > 0.14) {
+                    if (isFlatMode) {
+                        // Modo "Sem Muita Sombra": comprime fortemente a faixa dinâmica escura
+                        // Puxa sombras médias para perto do tom base iluminado
+                        const targetBase = 0.56;
+                        l = targetBase + (l - targetBase) * 0.42;
+                    } else {
+                        // Modo "Com Sombra Bem Mínima": suaviza o degradê mantendo leve profundidade
+                        const targetBase = 0.52;
+                        l = targetBase + (l - targetBase) * 0.68;
+                    }
+                }
+
+                // B. Aumento de Vibração e Saturação (Cores vivas dos Trailers)
+                if (s > 0.04) {
+                    // Vibração inteligente: satura mais as cores apagadas sem estourar as já saturadas
+                    const satMultiplier = 1 + vibranceBoost * (1 - s * 0.45);
+                    s = clamp(s * satMultiplier, 0, 0.96);
+                }
+
+                // C. Ajuste fino de Luminosidade
+                l = clamp(l + lightBoost * (1 - Math.abs(l - 0.5)), 0.04, 0.96);
+
+                // D. Simplificação de Degradê (Quantização controlada de Luminosidade e Matiz)
+                l = Math.round(l * quantLevels) / quantLevels;
+                s = Math.round(s * (quantLevels + 4)) / (quantLevels + 4);
+
+                // Converte de volta para RGB
+                const [finalR, finalG, finalB] = hslToRgb(h, s, l);
+
+                outPixels[i] = finalR;
+                outPixels[i + 1] = finalG;
+                outPixels[i + 2] = finalB;
+                outPixels[i + 3] = a; // Preserva transparência original
+            }
+
+            rawProcCtx.putImageData(outData, 0, 0);
+
+            // Atualiza os previews 2D visíveis
+            prevOrigCtx.clearRect(0, 0, 64, 64);
+            prevOrigCtx.drawImage(rawOrigCanvas, 0, 0);
+
+            prevResCtx.clearRect(0, 0, 64, 64);
+            prevResCtx.drawImage(rawProcCanvas, 0, 0);
+
+            // Atualiza a textura do boneco 3D
+            update3DSkinTexture();
+        }
+
+        /**
+         * Utilitários Matemáticos e Conversão de Cores (RGB <-> HSL)
+         */
+        function clamp(val, min, max) {
+            return Math.max(min, Math.min(max, val));
+        }
+
+        function hexToRgb(hex) {
+            const clean = hex.replace('#', '');
+            const num = parseInt(clean, 16);
+            return {
+                r: (num >> 16) & 255,
+                g: (num >> 8) & 255,
+                b: num & 255
+            };
+        }
+
+        function rgbToHsl(r, g, b) {
+            r /= 255; g /= 255; b /= 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+
+            if (max === min) {
+                h = s = 0;
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+            return [h, s, l];
+        }
+
+        function hslToRgb(h, s, l) {
+            let r, g, b;
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1 / 6) return p + (q - p) * 6 * t;
+                    if (t < 1 / 2) return q;
+                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                    return p;
+                };
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1 / 3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1 / 3);
+            }
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        }
+
+        /**
+         * ============================================================================
+         * UPLOAD DE ARQUIVO PNG (DRAG & DROP + INPUT)
+         * ============================================================================
+         */
+        function handleImageFile(file) {
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                showToast('Por favor, envie um arquivo de imagem válido (.PNG).', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const warnBox = document.getElementById('dimensionWarning');
+                    
+                    // Verifica se é 64x64
+                    if (img.width !== 64 || img.height !== 64) {
+                        warnBox.classList.remove('hidden');
+                        showToast(`Skin redimensionada de ${img.width}x${img.height} para 64x64px.`, 'warning');
+                    } else {
+                        warnBox.classList.add('hidden');
+                        showToast('Skin 64x64 carregada com sucesso!', 'success');
+                    }
+
+                    rawOrigCtx.clearRect(0, 0, 64, 64);
+                    // Se for formato antigo 64x32, desenha na parte superior
+                    if (img.width === 64 && img.height === 32) {
+                        rawOrigCtx.drawImage(img, 0, 0, 64, 32);
+                    } else {
+                        rawOrigCtx.drawImage(img, 0, 0, 64, 64);
+                    }
+
+                    const baseName = file.name.replace(/\.[^/.]+$/, '');
+                    state.skinFileName = `${baseName}_trailer_64x64.png`;
+                    document.getElementById('skinStatusBadge').textContent = file.name.slice(0, 22);
+
+                    processSkin();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Eventos de Upload
+        const fileInput = document.getElementById('skinFileInput');
+        const dropZone = document.getElementById('dropZone');
+
+        fileInput.addEventListener('change', (e) => handleImageFile(e.target.files[0]));
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-[#8CE665]', 'bg-[#252b22]');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-[#8CE665]', 'bg-[#252b22]');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-[#8CE665]', 'bg-[#252b22]');
+            if (e.dataTransfer.files.length > 0) {
+                handleImageFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        /**
+         * ============================================================================
+         * VISUALIZADOR 3D INTERATIVO DO PERSONAGEM MINECRAFT (THREE.JS)
+         * Mapeamento UV fiel ao layout 64x64 do Minecraft (Base + 2ª Camada)
+         * ============================================================================
+         */
+        let scene, camera, renderer, playerGroup, hatMeshes = [];
+        let skinTexture;
+        let isDragging = false;
+        let prevMouse = { x: 0, y: 0 };
+        let targetRotationY = 0.45;
+        let targetRotationX = 0.12;
+        let autoRotate = true;
+
+        function init3DViewer() {
+            const container = document.getElementById('threeContainer');
+            const width = container.clientWidth || 350;
+            const height = container.clientHeight || 340;
+
+            scene = new THREE.Scene();
+
+            camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 1000);
+            camera.position.set(0, 2, 46);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            // Iluminação estilo Trailer do Minecraft (Limpa, suave, vibrante)
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.82);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xfff8e7, 0.45);
+            dirLight.position.set(20, 35, 25);
+            scene.add(dirLight);
+
+            const backLight = new THREE.DirectionalLight(0xc2e9ff, 0.22);
+            backLight.position.set(-20, 10, -25);
+            scene.add(backLight);
+
+            // Textura Canvas
+            skinTexture = new THREE.CanvasTexture(rawProcCanvas);
+            skinTexture.magFilter = THREE.NearestFilter;
+            skinTexture.minFilter = THREE.NearestFilter;
+
+            const baseMaterial = new THREE.MeshLambertMaterial({
+                map: skinTexture,
+                transparent: false
+            });
+
+            const overlayMaterial = new THREE.MeshLambertMaterial({
+                map: skinTexture,
+                transparent: true,
+                alphaTest: 0.1,
+                side: THREE.DoubleSide
+            });
+
+            playerGroup = new THREE.Group();
+            scene.add(playerGroup);
+
+            // Função para criar cada parte do corpo com mapeamento UV exato 64x64 do Minecraft
+            function createBodyPart(w, h, d, u, v, material, inflate = 0) {
+                const geom = new THREE.BoxGeometry(w + inflate, h + inflate, d + inflate);
+                setMinecraftBoxUVs(geom, u, v, w, h, d, 64, 64);
+                return new THREE.Mesh(geom, material);
+            }
+
+            // 1. Cabeça (8x8x8) -> UV (0, 0) | Chapéu -> UV (32, 0)
+            const head = createBodyPart(8, 8, 8, 0, 0, baseMaterial);
+            head.position.set(0, 10, 0);
+            playerGroup.add(head);
+
+            const headHat = createBodyPart(8, 8, 8, 32, 0, overlayMaterial, 0.7);
+            headHat.position.set(0, 10, 0);
+            playerGroup.add(headHat);
+            hatMeshes.push(headHat);
+
+            // 2. Tronco (8x12x4) -> UV (16, 16) | Jaqueta -> UV (16, 32)
+            const body = createBodyPart(8, 12, 4, 16, 16, baseMaterial);
+            body.position.set(0, 0, 0);
+            playerGroup.add(body);
+
+            const bodyJacket = createBodyPart(8, 12, 4, 16, 32, overlayMaterial, 0.45);
+            bodyJacket.position.set(0, 0, 0);
+            playerGroup.add(bodyJacket);
+            hatMeshes.push(bodyJacket);
+
+            // 3. Braço Direito (4x12x4) -> UV (40, 16) | Manga -> UV (40, 32)
+            const rightArm = createBodyPart(4, 12, 4, 40, 16, baseMaterial);
+            rightArm.position.set(-6, 0, 0);
+            playerGroup.add(rightArm);
+
+            const rightSleeve = createBodyPart(4, 12, 4, 40, 32, overlayMaterial, 0.4);
+            rightSleeve.position.set(-6, 0, 0);
+            playerGroup.add(rightSleeve);
+            hatMeshes.push(rightSleeve);
+
+            // 4. Braço Esquerdo (4x12x4) -> UV (32, 48) | Manga -> UV (48, 48)
+            const leftArm = createBodyPart(4, 12, 4, 32, 48, baseMaterial);
+            leftArm.position.set(6, 0, 0);
+            playerGroup.add(leftArm);
+
+            const leftSleeve = createBodyPart(4, 12, 4, 48, 48, overlayMaterial, 0.4);
+            leftSleeve.position.set(6, 0, 0);
+            playerGroup.add(leftSleeve);
+            hatMeshes.push(leftSleeve);
+
+            // 5. Perna Direita (4x12x4) -> UV (0, 16) | Calça -> UV (0, 32)
+            const rightLeg = createBodyPart(4, 12, 4, 0, 16, baseMaterial);
+            rightLeg.position.set(-2, -12, 0);
+            playerGroup.add(rightLeg);
+
+            const rightPants = createBodyPart(4, 12, 4, 0, 32, overlayMaterial, 0.4);
+            rightPants.position.set(-2, -12, 0);
+            playerGroup.add(rightPants);
+            hatMeshes.push(rightPants);
+
+            // 6. Perna Esquerda (4x12x4) -> UV (16, 48) | Calça -> UV (0, 48)
+            const leftLeg = createBodyPart(4, 12, 4, 16, 48, baseMaterial);
+            leftLeg.position.set(2, -12, 0);
+            playerGroup.add(leftLeg);
+
+            const leftPants = createBodyPart(4, 12, 4, 0, 48, overlayMaterial, 0.4);
+            leftPants.position.set(2, -12, 0);
+            playerGroup.add(leftPants);
+            hatMeshes.push(leftPants);
+
+            // Plataforma de Bloco de Grama sob os pés do personagem
+            const grassPlatform = new THREE.Mesh(
+                new THREE.BoxGeometry(16, 2, 16),
+                new THREE.MeshLambertMaterial({ color: 0x5D9C42 })
+            );
+            grassPlatform.position.set(0, -19.2, 0);
+            playerGroup.add(grassPlatform);
+
+            const dirtPlatform = new THREE.Mesh(
+                new THREE.BoxGeometry(16, 3, 16),
+                new THREE.MeshLambertMaterial({ color: 0x79553A })
+            );
+            dirtPlatform.position.set(0, -21.7, 0);
+            playerGroup.add(dirtPlatform);
+
+            // Controles de Mouse e Touch para girar o modelo 3D
+            const domElem = renderer.domElement;
+
+            const onPointerDown = (x, y) => {
+                isDragging = true;
+                autoRotate = false;
+                prevMouse = { x, y };
+            };
+
+            const onPointerMove = (x, y) => {
+                if (!isDragging) return;
+                const dx = x - prevMouse.x;
+                const dy = y - prevMouse.y;
+                targetRotationY += dx * 0.012;
+                targetRotationX = clamp(targetRotationX + dy * 0.01, -0.6, 0.6);
+                prevMouse = { x, y };
+            };
+
+            const onPointerUp = () => {
+                isDragging = false;
+            };
+
+            domElem.addEventListener('mousedown', (e) => onPointerDown(e.clientX, e.clientY));
+            window.addEventListener('mousemove', (e) => onPointerMove(e.clientX, e.clientY));
+            window.addEventListener('mouseup', onPointerUp);
+
+            domElem.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) onPointerDown(e.touches[0].clientX, e.touches[0].clientY);
+            }, { passive: true });
+
+            domElem.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1) onPointerMove(e.touches[0].clientX, e.touches[0].clientY);
+            }, { passive: true });
+
+            domElem.addEventListener('touchend', onPointerUp);
+
+            // Responsividade do Canvas 3D
+            window.addEventListener('resize', () => {
+                if (!container) return;
+                const w = container.clientWidth;
+                const h = container.clientHeight;
+                if (w > 0 && h > 0) {
+                    camera.aspect = w / h;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(w, h);
+                }
+            });
+
+            // Loop de Animação
+            function animate() {
+                requestAnimationFrame(animate);
+                if (autoRotate) {
+                    targetRotationY += 0.008;
+                }
+                playerGroup.rotation.y += (targetRotationY - playerGroup.rotation.y) * 0.12;
+                playerGroup.rotation.x += (targetRotationX - playerGroup.rotation.x) * 0.12;
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        /**
+         * Mapeamento UV Padrão de Cubos de Skin do Minecraft (64x64)
+         * Ordem das faces no BoxGeometry do Three.js:
+         * 0: Right (+X), 1: Left (-X), 2: Top (+Y), 3: Bottom (-Y), 4: Front (+Z), 5: Back (-Z)
+         */
+        function setMinecraftBoxUVs(geometry, u, v, w, h, d, texW, texH) {
+            const uvAttr = geometry.attributes.uv;
+
+            function applyFaceUV(faceIndex, x, y, width, height) {
+                const u0 = x / texW;
+                const u1 = (x + width) / texW;
+                // No Three.js, V=1 é o topo da imagem e V=0 é a base
+                const v1 = 1 - (y / texH);
+                const v0 = 1 - ((y + height) / texH);
+
+                const idx = faceIndex * 4;
+                uvAttr.setXY(idx + 0, u0, v1);
+                uvAttr.setXY(idx + 1, u1, v1);
+                uvAttr.setXY(idx + 2, u0, v0);
+                uvAttr.setXY(idx + 3, u1, v0);
+            }
+
+            // Face Right (+X -> Lado esquerdo do personagem na tela / Right UV box)
+            applyFaceUV(0, u, v + d, d, h);
+            // Face Left (-X -> Lado direito do personagem na tela / Left UV box)
+            applyFaceUV(1, u + d + w, v + d, d, h);
+            // Face Top (+Y)
+            applyFaceUV(2, u + d, v, w, d);
+            // Face Bottom (-Y)
+            applyFaceUV(3, u + d + w, v, w, d);
+            // Face Front (+Z)
+            applyFaceUV(4, u + d, v + d, w, h);
+            // Face Back (-Z)
+            applyFaceUV(5, u + d + w + d, v + d, w, h);
+
+            uvAttr.needsUpdate = true;
+        }
+
+        function update3DSkinTexture() {
+            if (!skinTexture) return;
+            skinTexture.image = state.preview3DMode === 'trailer' ? rawProcCanvas : rawOrigCanvas;
+            skinTexture.needsUpdate = true;
+        }
+
+        /**
+         * ============================================================================
+         * EVENTOS DE CONTROLE DA INTERFACE
+         * ============================================================================
+         */
+        // Botões de Exemplo
+        document.getElementById('btnLoadSteve').addEventListener('click', () => {
+            generateExampleSkin('steve');
+            showToast('Skin de exemplo (Steve) carregada!');
+        });
+
+        document.getElementById('btnLoadAlex').addEventListener('click', () => {
+            generateExampleSkin('alex');
+            showToast('Skin de exemplo (Alex/Aventureira) carregada!');
+        });
+
+        // Toggle Modo de Sombra: "Sem Muita Sombra" vs "Com Sombra Bem Mínima"
+        const btnShadowFlat = document.getElementById('btnShadowFlat');
+        const btnShadowMinimal = document.getElementById('btnShadowMinimal');
+        const activeModeTag = document.getElementById('activeModeTag');
+
+        btnShadowFlat.addEventListener('click', () => {
+            state.shadowMode = 'flat';
+            btnShadowFlat.classList.add('mc-toggle-active');
+            btnShadowMinimal.classList.remove('mc-toggle-active');
+            activeModeTag.textContent = 'Sem Muita Sombra';
+            processSkin();
+        });
+
+        btnShadowMinimal.addEventListener('click', () => {
+            state.shadowMode = 'minimal';
+            btnShadowMinimal.classList.add('mc-toggle-active');
+            btnShadowFlat.classList.remove('mc-toggle-active');
+            activeModeTag.textContent = 'Sombra Mínima';
+            processSkin();
+        });
+
+        // Sliders de Ajuste Fino
+        const sliderVibrance = document.getElementById('sliderVibrance');
+        const sliderSmoothing = document.getElementById('sliderSmoothing');
+        const sliderBrightness = document.getElementById('sliderBrightness');
+
+        sliderVibrance.addEventListener('input', (e) => {
+            state.vibrance = parseInt(e.target.value, 10);
+            document.getElementById('valVibrance').textContent = `+${Math.round(state.vibrance * 0.65)}%`;
+            processSkin();
+        });
+
+        sliderSmoothing.addEventListener('input', (e) => {
+            state.smoothing = parseInt(e.target.value, 10);
+            const label = state.smoothing < 35 ? 'Suave' : state.smoothing < 75 ? 'Alto (Trailer)' : 'Máximo';
+            document.getElementById('valSmoothing').textContent = label;
+            processSkin();
+        });
+
+        sliderBrightness.addEventListener('input', (e) => {
+            state.brightness = parseInt(e.target.value, 10);
+            const sign = state.brightness >= 0 ? '+' : '';
+            document.getElementById('valBrightness').textContent = `${sign}${state.brightness}%`;
+            processSkin();
+        });
+
+        document.getElementById('btnResetSliders').addEventListener('click', () => {
+            state.vibrance = 55;
+            state.smoothing = 72;
+            state.brightness = 8;
+
+            sliderVibrance.value = 55;
+            sliderSmoothing.value = 72;
+            sliderBrightness.value = 8;
+
+            document.getElementById('valVibrance').textContent = '+35%';
+            document.getElementById('valSmoothing').textContent = 'Alto';
+            document.getElementById('valBrightness').textContent = '+8%';
+
+            processSkin();
+            showToast('Ajustes de paleta restaurados ao padrão de trailer.');
+        });
+
+        // Botões da Pré-visualização (2ª Camada, Grade 64x64, Girar)
+        const btnToggleHat = document.getElementById('btnToggleHat');
+        btnToggleHat.addEventListener('click', () => {
+            state.showHat = !state.showHat;
+            hatMeshes.forEach(mesh => mesh.visible = state.showHat);
+            btnToggleHat.textContent = `2ª Camada (Chapéu/Roupa): ${state.showHat ? 'ON' : 'OFF'}`;
+            btnToggleHat.classList.toggle('mc-toggle-active', state.showHat);
+        });
+
+        const btnToggleGrid = document.getElementById('btnToggleGrid');
+        btnToggleGrid.addEventListener('click', () => {
+            state.showGrid = !state.showGrid;
+            document.querySelectorAll('.grid-overlay').forEach(el => {
+                el.classList.toggle('hidden', !state.showGrid);
+            });
+            btnToggleGrid.textContent = `Grade 64x64: ${state.showGrid ? 'ON' : 'OFF'}`;
+            btnToggleGrid.classList.toggle('mc-toggle-active', state.showGrid);
+        });
+
+        document.getElementById('btnFlipModel').addEventListener('click', () => {
+            autoRotate = false;
+            targetRotationY += Math.PI;
+        });
+
+        // Alternar 3D entre Estilo Trailer e Original
+        const btn3DTrailer = document.getElementById('btn3DTrailer');
+        const btn3DOriginal = document.getElementById('btn3DOriginal');
+
+        btn3DTrailer.addEventListener('click', () => {
+            state.preview3DMode = 'trailer';
+            btn3DTrailer.className = 'px-3 py-1 rounded text-xs font-bold bg-[#3C8527] text-white transition';
+            btn3DOriginal.className = 'px-3 py-1 rounded text-xs font-bold text-gray-300 hover:text-white transition';
+            update3DSkinTexture();
+        });
+
+        btn3DOriginal.addEventListener('click', () => {
+            state.preview3DMode = 'original';
+            btn3DOriginal.className = 'px-3 py-1 rounded text-xs font-bold bg-[#555555] text-white transition';
+            btn3DTrailer.className = 'px-3 py-1 rounded text-xs font-bold text-gray-300 hover:text-white transition';
+            update3DSkinTexture();
+        });
+
+        /**
+         * ============================================================================
+         * EXPORTAÇÃO E DOWNLOAD DA SKIN NATIVA 64x64 (.PNG)
+         * ============================================================================
+         */
+        document.getElementById('btnDownloadSkin').addEventListener('click', () => {
+            try {
+                const dataURL = rawProcCanvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = state.skinFileName || 'minecraft_trailer_skin_64x64.png';
+                link.href = dataURL;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showToast('Download iniciado! Skin 64x64 pronta para o Minecraft.', 'success');
+            } catch (err) {
+                console.error('Erro ao exportar skin:', err);
+                showToast('Ocorreu um erro ao gerar o arquivo PNG.', 'error');
+            }
+        });
+
+        // Inicialização ao carregar a janela
+        window.onload = function() {
+            init3DViewer();
+            generateExampleSkin('steve');
+        };
+    </script>
+</body>
+</html>
